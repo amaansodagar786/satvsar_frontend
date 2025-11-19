@@ -1653,37 +1653,45 @@ const Sales = () => {
         const user = userData ? JSON.parse(userData) : null;
 
         console.log("🔄 Starting product update process...");
-        console.log("Original items from invoice:", invoice.items);
-        console.log("Updated items from edited state:", editedItems);
 
-        // Prepare updated items without the temporary originalQuantity field
-        const itemsToSend = editedItems.map(item => {
-          const { originalQuantity, ...itemToSend } = item;
-          return itemToSend;
+        // ✅ FIX: Calculate proper tax values for each item before sending
+        const itemsWithProperCalculations = editedItems.map(item => {
+          const quantity = item.quantity || 1;
+          const price = item.price || 0;
+          const discount = item.discount || 0;
+          const taxRate = item.taxSlab || 18;
+
+          // Calculate item totals with proper tax breakdown
+          const itemTotalBeforeDiscount = price * quantity;
+          const discountAmount = itemTotalBeforeDiscount * (discount / 100);
+          const itemTotalAfterDiscount = itemTotalBeforeDiscount - discountAmount;
+
+          // Calculate tax components
+          const baseValue = itemTotalAfterDiscount / (1 + taxRate / 100);
+          const taxAmount = itemTotalAfterDiscount - baseValue;
+          const cgstAmount = taxAmount / 2;
+          const sgstAmount = taxAmount / 2;
+          const finalAmount = itemTotalAfterDiscount;
+
+          return {
+            ...item,
+            baseValue: parseFloat(baseValue.toFixed(2)),
+            discountAmount: parseFloat(discountAmount.toFixed(2)),
+            taxAmount: parseFloat(taxAmount.toFixed(2)),
+            cgstAmount: parseFloat(cgstAmount.toFixed(2)),
+            sgstAmount: parseFloat(sgstAmount.toFixed(2)),
+            totalAmount: parseFloat(itemTotalAfterDiscount.toFixed(2)),
+            finalAmount: parseFloat(finalAmount.toFixed(2))
+          };
         });
 
-        // Debug: Check if quantities are actually different
-        invoice.items.forEach((originalItem, index) => {
-          const updatedItem = editedItems.find(item =>
-            item.productId === originalItem.productId &&
-            item.batchNumber === originalItem.batchNumber
-          );
-
-          if (updatedItem) {
-            console.log(`🔍 Quantity comparison for ${originalItem.name}:`, {
-              original: originalItem.quantity,
-              updated: updatedItem.quantity,
-              different: originalItem.quantity !== updatedItem.quantity,
-              batch: originalItem.batchNumber
-            });
-          }
-        });
+        console.log("✅ Items with proper calculations:", itemsWithProperCalculations);
 
         const response = await axios.put(
           `${import.meta.env.VITE_API_URL}/invoices/update-invoice-products/${invoice.invoiceNumber}`,
           {
-            updatedItems: itemsToSend, // Use the cleaned items
-            originalItems: invoice.items, // Make sure this is the ORIGINAL from the invoice
+            updatedItems: itemsWithProperCalculations,
+            originalItems: invoice.items,
             userDetails: user ? {
               userId: user.userId,
               name: user.name,
@@ -1693,27 +1701,17 @@ const Sales = () => {
         );
 
         if (response.data.success) {
-          // Update local state with new invoice data
           setEditedInvoice(response.data.data);
           setIsEditingProducts(false);
-
-          console.log("✅ Products updated successfully:", response.data.updateSummary);
           toast.success("Invoice products updated successfully!");
 
-          // Refresh parent component if needed
           if (onUpdate) {
             onUpdate(response.data.data);
           }
-
-          // Refresh inventory data to reflect changes
           fetchInventory();
-
-          console.log("🔄 Inventory refresh triggered");
         }
       } catch (error) {
         console.error("❌ Error updating invoice products:", error);
-
-        // More specific error messages
         if (error.response?.data?.errors) {
           const errors = error.response.data.errors;
           if (Array.isArray(errors)) {
@@ -1855,6 +1853,8 @@ const Sales = () => {
 
       // ✅ FIXED: Direct calculation without unnecessary Math.max
       const amountBeforeTax = subtotal - itemDiscount;
+      const amountAfterPromo = amountBeforeTax - promoDiscount;
+      const amountAfterLoyalty = amountAfterPromo - loyaltyDiscount;
 
       console.log("🔍 VIEW MODE CALCULATION - Calculated amounts:", {
         subtotal,
@@ -1869,8 +1869,8 @@ const Sales = () => {
         promoDiscount,
         loyaltyDiscount,
         amountBeforeTax: amountBeforeTax, // ✅ NOW IT WILL SHOW THE CORRECT VALUE
-        amountAfterPromo: Math.max(0, amountBeforeTax - promoDiscount),
-        amountAfterLoyalty: Math.max(0, (amountBeforeTax - promoDiscount) - loyaltyDiscount),
+        amountAfterPromo: amountAfterPromo, // ✅ NOW IT WILL SHOW CORRECT VALUE
+        amountAfterLoyalty: amountAfterLoyalty,
         tax,
         cgst,
         sgst,
@@ -2428,7 +2428,7 @@ const Sales = () => {
                     <div className="calculation-step taxable-amount">
                       <span className="step-label">Amount After Promo:</span>
                       <span className="step-value">
-                        ₹{safeToFixed((currentTotals.subtotal - currentTotals.discount) - currentTotals.promoDiscount)}
+                        ₹{safeToFixed(currentTotals.amountAfterPromo)} {/* ✅ FIXED */}
                       </span>
                     </div>
                   </>
@@ -2447,9 +2447,7 @@ const Sales = () => {
                     <div className="calculation-step amount-after-loyalty">
                       <span className="step-label">Amount After Loyalty:</span>
                       <span className="step-value">
-                        ₹{safeToFixed(
-                          (currentTotals.subtotal - currentTotals.discount - currentTotals.promoDiscount) - currentTotals.loyaltyDiscount
-                        )}
+                        ₹{safeToFixed(currentTotals.amountAfterLoyalty)} {/* ✅ FIXED */}
                       </span>
                     </div>
                   </>

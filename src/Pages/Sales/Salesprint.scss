@@ -100,10 +100,19 @@
     }
   }
 
-  /* Tax Invoice Heading */
+  /* Tax Invoice Heading with Logo on Right */
   .tax-invoice-heading {
     text-align: center;
     margin: 0 0 10px 0;
+    position: relative;
+
+    .heading-with-logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 100%;
+    }
 
     h1 {
       margin: 0;
@@ -111,6 +120,19 @@
       font-weight: bold;
       color: #333;
       text-decoration: none;
+    }
+
+    .right-logo {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+
+      img {
+        max-width: 100px;
+        height: auto;
+        display: block;
+      }
     }
   }
 
@@ -153,7 +175,7 @@
     }
   }
 
-  /* Items Table - Keep as current but add page break control */
+  /* Items Table - Adjusted column widths */
   .items-section {
     margin-bottom: 5px;
     page-break-inside: auto; // Allow breaking inside items section
@@ -170,7 +192,7 @@
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      table-layout: auto;
+      table-layout: fixed; // Changed to fixed for better column control
 
       th,
       td {
@@ -191,10 +213,47 @@
         text-align: right;
 
         &:nth-child(2),
-        &:nth-child(3),
-        &:nth-child(4) {
+        // Product Name - increased width
+        &:nth-child(3) {
+          // Item Code - reduced width
           text-align: left;
         }
+      }
+
+      // Column width adjustments
+      th:nth-child(1),
+      td:nth-child(1) {
+        width: 8%; // Sr No
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 35%; // Product Name - increased width
+      }
+
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 12%; // Item Code - reduced width
+      }
+
+      th:nth-child(4),
+      td:nth-child(4) {
+        width: 8%; // Qty
+      }
+
+      th:nth-child(5),
+      td:nth-child(5) {
+        width: 12%; // Price
+      }
+
+      th:nth-child(6),
+      td:nth-child(6) {
+        width: 10%; // Disc %
+      }
+
+      th:nth-child(7),
+      td:nth-child(7) {
+        width: 15%; // Total Amount
       }
 
       // Allow rows to break across pages
@@ -296,7 +355,7 @@
     }
   }
 
-  /* Footer - Normal footer section */
+  /* Footer - Swapped positions: thank you left, signature right */
   .invoice-footer {
     display: flex;
     justify-content: space-between;
@@ -309,7 +368,7 @@
 
     .thank-you {
       flex: 1;
-      text-align: center;
+      text-align: left; // Changed from center to left
 
       p {
         font-weight: bold;
@@ -320,18 +379,19 @@
 
     .signature {
       flex: 1;
-      text-align: center;
+      text-align: right; // Changed from center to right
 
       p {
         margin: 0 0 5px 0;
         font-size: 11px;
+        text-align: center; // Center the text with the line
       }
 
       .signature-line {
         width: 150px;
         height: 1px;
         background: #333;
-        margin: 0 auto;
+        margin: 0 auto; // Center the line and make text centered with it
       }
     }
 

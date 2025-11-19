@@ -2,6 +2,7 @@ import React from "react";
 import "./Salesprint.scss";
 // import logo from "../../Assets/logo/jass_logo1.png";
 import logo from "../../Assets/logo/satvsar.png"
+import main from "../../Assets/logo/elements.png"
 
 const SalesPrint = ({ invoice }) => {
   if (!invoice) return null;
@@ -137,24 +138,25 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
 
           <div className="logo-address-center">
             <div className="invoice-logo">
-              <img src={logo} alt="Company Logo" />
+              <img src={main} alt="Company Logo" />
             </div>
             <div className="company-address">
               <div className="address-details">
                 <p>G.F 39, Infinity Arcade, Nr Pratapnagar Bridge,</p>
                 <p>ONGC Road, Pratapnagar, Vadodara - 340004</p>
-
-
-                
-
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tax Invoice Heading */}
+        {/* Tax Invoice Heading with Logo on Right */}
         <div className="tax-invoice-heading">
-          <h1>TAX INVOICE</h1>
+          <div className="heading-with-logo">
+            <h1>TAX INVOICE</h1>
+            <div className="right-logo">
+              <img src={logo} alt="Company Logo" />
+            </div>
+          </div>
         </div>
 
         {/* Invoice + Billing Section */}
@@ -216,14 +218,13 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
           </div>
         </div>
 
-        {/* Items Table */}
+        {/* Items Table - Barcode column removed */}
         <div className="items-section">
           <h3>Items Details</h3>
           <table className="items-table">
             <thead>
               <tr>
                 <th>Sr No</th>
-                <th>Barcode</th>
                 <th>Product Name</th>
                 <th>Item Code</th>
                 <th>Qty</th>
@@ -236,7 +237,6 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
               {items && items.map((item, index) => (
                 <tr key={index}>
                   <td>{index + 1}</td>
-                  <td>{item.barcode || "N/A"}</td>
                   <td>{item.name || "N/A"}</td>
                   <td>{item.hsn || "N/A"}</td>
                   <td>{item.quantity || 1}</td>
@@ -315,17 +315,13 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
 
         {/* Declaration and Terms Section */}
         <div className="declaration-terms-section">
-          <div className="declaration-section">
-            <h3>Declaration</h3>
-            <p>{declaration}</p>
-          </div>
           <div className="terms-section">
             <h3>Terms & Conditions</h3>
             <p dangerouslySetInnerHTML={{ __html: termsAndConditions }}></p>
           </div>
         </div>
 
-        {/* Normal Footer Section */}
+        {/* Normal Footer Section - Swapped positions */}
         <div className="invoice-footer">
           <div className="thank-you">
             <p>Thank you for your business!</p>
@@ -334,13 +330,7 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
             <p>Authorized Signature</p>
             <div className="signature-line"></div>
           </div>
-          <div className="developer-note">
-            <p>
-              Developed by <a href="https://techorses.com" target="_blank" rel="noopener noreferrer">Techorses</a>
-            </p>
-          </div>
         </div>
-
 
       </div>
     </div>

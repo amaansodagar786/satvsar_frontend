@@ -74,7 +74,7 @@ const Items = () => {
 
   const initialValues = {
     productName: "",
-    barcode: "",
+    barcode: "1",
     hsnCode: "",
     taxSlab: "",
     price: "",
@@ -106,7 +106,6 @@ const Items = () => {
 
   const validationSchema = Yup.object({
     productName: Yup.string().required("Product Name is required"),
-    barcode: Yup.string().required("Barcode is required"),
     hsnCode: Yup.string().required("HSN Code is required"),
     taxSlab: Yup.string().required("Tax Slab is required"),
     price: Yup.number()
@@ -1304,23 +1303,14 @@ const Items = () => {
 
                 <div className="form-row">
                   <div className="form-field">
-                    <label><FaBarcode /> Barcode *</label>
-                    <Field name="barcode" type="text" />
-                    <ErrorMessage name="barcode" component="div" className="error" />
-                  </div>
-                  <div className="form-field">
                     <label><FaHashtag /> HSN Code *</label>
                     <Field name="hsnCode" type="text" />
                     <ErrorMessage name="hsnCode" component="div" className="error" />
                   </div>
-                </div>
 
-                <div className="form-row">
-                  <div className="form-field">
-                    <label><FaRupeeSign /> Price *</label>
-                    <Field name="price" type="number" step="0.01" />
-                    <ErrorMessage name="price" component="div" className="error" />
-                  </div>
+
+
+
                   <div className="form-field">
                     <label><FaPercent /> Tax Slab *</label>
                     <Field as="select" name="taxSlab" className="select-field">
@@ -1332,6 +1322,16 @@ const Items = () => {
                       ))}
                     </Field>
                     <ErrorMessage name="taxSlab" component="div" className="error" />
+                  </div>
+
+
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label><FaRupeeSign /> Price *</label>
+                    <Field name="price" type="number" step="0.01" />
+                    <ErrorMessage name="price" component="div" className="error" />
                   </div>
                 </div>
 
@@ -1358,7 +1358,7 @@ const Items = () => {
                   <tr>
                     <th>Product Name</th>
                     <th>Category</th>
-                    <th>Barcode</th>
+                    {/* <th>Barcode</th> */}
                     <th>HSN Code</th>
                     <th>Tax Slab</th>
                     <th>Price</th>
@@ -1380,7 +1380,7 @@ const Items = () => {
                     >
                       <td>{item.productName}</td>
                       <td>{item.category}</td>
-                      <td>{item.barcode}</td>
+                      {/* <td>{item.barcode}</td> */}
                       <td>{item.hsnCode}</td>
                       <td>{item.taxSlab}%</td>
                       <td>

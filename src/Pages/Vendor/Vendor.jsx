@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import Navbar from "../../Components/Sidebar/Navbar";
+import Count from "./ex" ; 
 import {
   FaUserTie, FaEnvelope, FaPhone, FaMapMarkerAlt,
   FaIdCard, FaPlus, FaFileExport, FaFileExcel, FaSearch, FaEdit, FaSave, FaTrash
@@ -909,6 +910,8 @@ const Vendor = () => {
           />
         )}
       </div>
+
+      <Count/>
     </Navbar>
   );
 };
