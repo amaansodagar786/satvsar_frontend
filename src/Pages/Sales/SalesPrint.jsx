@@ -1,7 +1,7 @@
 import React from "react";
 import "./Salesprint.scss";
 // import logo from "../../Assets/logo/jass_logo1.png";
-import logo from "../../Assets/logo/invoice_logo.png"
+import logo from "../../Assets/logo/satvsar.png"
 
 const SalesPrint = ({ invoice }) => {
   if (!invoice) return null;
@@ -128,10 +128,10 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
         <div className="invoice-header">
           <div className="company-top-info">
             <div className="company-name-left">
-              <p><strong>TECHORSES</strong></p>
+              <p><strong>Elements Corporation</strong></p>
             </div>
             <div className="gst-number-right">
-              <p>24AAICS9235N...</p>
+              <p>24BNYPD2078K2ZI</p>
             </div>
           </div>
 
@@ -141,8 +141,8 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
             </div>
             <div className="company-address">
               <div className="address-details">
-                <p>B-224, Samanvay Silicon, Opp Kalyan Hotel, Dairy Den Circle,</p>
-                <p> Sayajigunj, Vadodara, 390020 (Gujarat, India)</p>
+                <p>G.F 39, Infinity Arcade, Nr Pratapnagar Bridge,</p>
+                <p>ONGC Road, Pratapnagar, Vadodara - 340004</p>
 
 
                 

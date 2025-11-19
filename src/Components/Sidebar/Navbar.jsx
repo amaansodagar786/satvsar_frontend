@@ -15,7 +15,8 @@ import { FiUser } from "react-icons/fi";
 import { MdDiscount } from "react-icons/md";
 import { FaSearch, FaFileExcel, FaPlus } from "react-icons/fa";
 
-import logo from "../../Assets/logo/logo.png";
+// import logo from "../../Assets/logo/logo.png";
+import logo from "../../Assets/logo/satvsar.png";
 import "./Navbar.css";
 
 const Navbar = ({
