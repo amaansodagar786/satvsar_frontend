@@ -1290,7 +1290,7 @@ const Items = () => {
                   <div className="form-field">
                     <label>Category *</label>
                     <Field as="select" name="category" className="select-field">
-                      <option value="">Select Category*</option>
+                      <option value="">Select Category</option>
                       {categories.map((category, index) => (
                         <option key={category.categoryId || index} value={category.name}>
                           {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
