@@ -11,6 +11,7 @@ const SalesPrint = ({ invoice }) => {
     invoiceNumber,
     date,
     customer,
+    shippingDetails,
     items,
     paymentType,
     subtotal,
@@ -27,8 +28,14 @@ const SalesPrint = ({ invoice }) => {
   } = invoice;
 
   const termsAndConditions = `
-Items once sold will not be taken back.<br />
-Only manufacturing defects are eligible for replacement<br /> within 1 day of purchase.
+Any Sort of Complaint for this Invoice should be Communicated within One Week.<br />
+Goods once sold will not be taken back.<br />
+Only manufacturing defects are eligible for replacement within 1 day of purchase. <br />
+Intrest @ 18% p.a. will be charged if payment is not made within due date.<br />
+Cheque Should be Drawn in Favor of "Elements Corporation"<br />
+Subject to VADODARA Jurisdiction.<br />
+"E.&O.E"<br />
+
 `;
 
   const declaration = `
@@ -152,7 +159,20 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
         {/* Tax Invoice Heading with Logo on Right */}
         <div className="tax-invoice-heading">
           <div className="heading-with-logo">
+            {/* ✅ LEFT SIDE: Invoice Number and Date */}
+            <div className="invoice-number-date-left">
+              <div className="invoice-number">
+                <strong>Invoice No:</strong> {invoiceNumber || "N/A"}
+              </div>
+              <div className="invoice-date">
+                <strong>Date:</strong> {date || "N/A"}
+              </div>
+            </div>
+
+            {/* ✅ CENTER: Tax Invoice Heading */}
             <h1>TAX INVOICE</h1>
+
+            {/* ✅ RIGHT SIDE: Satvsar Logo */}
             <div className="right-logo">
               <img src={logo} alt="Company Logo" />
             </div>
@@ -169,6 +189,12 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
                   <td>Customer Name:</td>
                   <td>{customer?.name || "N/A"}</td>
                 </tr>
+                {customer?.gstNumber && (
+                  <tr>
+                    <td>GST Number:</td>
+                    <td>{customer.gstNumber}</td>
+                  </tr>
+                )}
                 {customer?.email && (
                   <tr>
                     <td>Email:</td>
@@ -185,37 +211,37 @@ Only manufacturing defects are eligible for replacement<br /> within 1 day of pu
             </table>
           </div>
 
-          <div className="invoice-info">
-            <h3>Invoice Details</h3>
-            <table className="details-table">
-              <tbody>
-                <tr>
-                  <td>Invoice Number:</td>
-                  <td>{invoiceNumber || "N/A"}</td>
-                </tr>
-                <tr>
-                  <td>Date:</td>
-                  <td>{date || "N/A"}</td>
-                </tr>
-                <tr>
-                  <td>Payment Type:</td>
-                  <td>{(paymentType || "N/A").toUpperCase()}</td>
-                </tr>
-                {appliedPromoCode && (
+          {shippingDetails && (
+            <div className="shipping-info">
+              <h3>Shipping Details</h3>
+              <table className="details-table">
+                <tbody>
                   <tr>
-                    <td>Promo Code:</td>
-                    <td>{appliedPromoCode.code} ({appliedPromoCode.discount}% off)</td>
+                    <td>Shipping Name:</td>
+                    <td>{shippingDetails.name || "N/A"}</td>
                   </tr>
-                )}
-                {loyaltyDiscount > 0 && (
-                  <tr>
-                    <td>Coins Used:</td>
-                    <td>{invoice.loyaltyCoinsUsed || 0} coins</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  {shippingDetails.gstNumber && (
+                    <tr>
+                      <td>GST Number:</td>
+                      <td>{shippingDetails.gstNumber}</td>
+                    </tr>
+                  )}
+                  {shippingDetails.email && (
+                    <tr>
+                      <td>Email:</td>
+                      <td>{shippingDetails.email}</td>
+                    </tr>
+                  )}
+                  {shippingDetails.mobile && (
+                    <tr>
+                      <td>Mobile:</td>
+                      <td>{shippingDetails.mobile}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Items Table - Barcode column removed */}

@@ -1945,3 +1945,63 @@
   margin-left: 10px;
   font-weight: normal;
 }
+
+// Shipping Details Styles
+.same-as-billing-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: #e9ecef;
+  }
+}
+
+.shipping-details-form {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-top: 10px;
+
+  .form-group-row {
+    margin-bottom: 15px;
+  }
+}
+
+// Customer GST Field
+.customer-gst-field {
+  margin-top: 10px;
+}
+
+
+
+/* Remove the grid layout for shipping details */
+.shipping-details-fields {
+  display: block;
+}
+
+/* Ensure each detail-row takes full width */
+.shipping-details-fields .detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid #f0f0f0;
+  width: 100%;
+}
+
+.shipping-details-fields .detail-row:last-child {
+  border-bottom: none;
+}

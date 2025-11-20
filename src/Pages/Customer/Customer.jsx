@@ -149,6 +149,12 @@ const Customer = () => {
             <div style="font-weight: bold; color: #555; margin-bottom: 4px;">Mobile Number</div>
             <div>${customer.contactNumber || 'N/A'}</div>
           </div>
+
+          // Add this section in the PDF content after Mobile Number
+<div style="margin-bottom: 12px;">
+  <div style="font-weight: bold; color: #555; margin-bottom: 4px;">GST Number</div>
+  <div>${customer.gstNumber || 'N/A'}</div>
+</div>
           
           <div style="margin-bottom: 12px;">
             <div style="font-weight: bold; color: #555; margin-bottom: 4px;">Loyalty Coins</div>
@@ -175,6 +181,7 @@ const Customer = () => {
         Name: customer.customerName,
         Email: customer.email,
         "Mobile Number": customer.contactNumber,
+        "GST Number": customer.gstNumber || 'N/A',
         "Loyalty Coins": customer.loyaltyCoins || 0, // Added this column
       }))
     );
@@ -313,6 +320,7 @@ const Customer = () => {
     customerName: "",
     email: "",
     contactNumber: "",
+    gstNumber: "",
   };
 
   // Validation schema
@@ -327,6 +335,14 @@ const Customer = () => {
       .matches(/^[0-9]+$/, "Must be only digits")
       .min(10, "Must be exactly 10 digits")
       .max(10, "Must be exactly 10 digits"),
+    gstNumber: Yup.string() // Add this validation
+      .matches(
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+        "Invalid GST number format"
+      )
+      .nullable()
+      .transform((value) => (value === '' ? null : value)),
+
   });
 
   // Handle form submission
@@ -469,6 +485,10 @@ const Customer = () => {
       else if (!/^[0-9]+$/.test(values.contactNumber)) newErrors.contactNumber = "Must be only digits";
       else if (values.contactNumber.length !== 10) newErrors.contactNumber = "Must be exactly 10 digits";
 
+
+      if (values.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(values.gstNumber))
+        newErrors.gstNumber = "Invalid GST number format";
+
       return newErrors;
     };
 
@@ -568,6 +588,26 @@ const Customer = () => {
                   </div>
                 ) : (
                   <span className="detail-value">{customer.contactNumber || 'N/A'}</span>
+                )}
+              </div>
+
+              {/* GST Number */}
+              <div className="detail-row">
+                <span className="detail-label">GST Number</span>
+                {isEditing ? (
+                  <div className="edit-field-container">
+                    <input
+                      type="text"
+                      name="gstNumber"
+                      value={editedCustomer.gstNumber || ''}
+                      onChange={handleInputChange}
+                      className={`edit-input ${errors.gstNumber ? 'error' : ''}`}
+                      placeholder="Optional"
+                    />
+                    {errors.gstNumber && <div className="error-message">{errors.gstNumber}</div>}
+                  </div>
+                ) : (
+                  <span className="detail-value">{customer.gstNumber || 'N/A'}</span>
                 )}
               </div>
 
@@ -850,19 +890,29 @@ const Customer = () => {
 
                 <div className="form-row">
                   <div className="form-field">
+                    <label><FaPhone /> Mobile Number *</label>
+                    <Field name="contactNumber" type="text" />
+                    <ErrorMessage name="contactNumber" component="div" className="error" />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label>GST Number</label>
+                    <Field name="gstNumber" type="text" placeholder="Optional" />
+                    <ErrorMessage name="gstNumber" component="div" className="error" />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
                     <label><FaEnvelope /> Email *</label>
                     <Field name="email" type="email" />
                     <ErrorMessage name="email" component="div" className="error" />
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-field">
-                    <label><FaPhone /> Mobile Number *</label>
-                    <Field name="contactNumber" type="text" />
-                    <ErrorMessage name="contactNumber" component="div" className="error" />
-                  </div>
-                </div>
+
 
                 <button type="submit" disabled={isFormSubmitting}>
                   {isFormSubmitting ? (
@@ -893,6 +943,7 @@ const Customer = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Mobile Number</th>
+                    <th>GST Number</th>
                     <th>Loyalty Coins</th>
                   </tr>
                 </thead>
@@ -908,6 +959,7 @@ const Customer = () => {
                       <td>{cust.customerName}</td>
                       <td>{cust.email}</td>
                       <td>{cust.contactNumber}</td>
+                      <td>{cust.gstNumber || 'N/A'}</td>
                       <td>{cust.loyaltyCoins || 0}</td>
                     </tr>
                   ))}

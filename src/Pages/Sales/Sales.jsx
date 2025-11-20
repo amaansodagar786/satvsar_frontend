@@ -66,7 +66,30 @@ const Sales = () => {
   const [usableLoyaltyCoins, setUsableLoyaltyCoins] = useState(0);
 
 
+
+
   const [userPermissions, setUserPermissions] = useState([]);
+
+  const [shippingDetails, setShippingDetails] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    gstNumber: "",
+  });
+
+  const [sameAsBilling, setSameAsBilling] = useState(false);
+
+  // Auto-fill shipping details when sameAsBilling is checked or customer changes
+  useEffect(() => {
+    if (sameAsBilling && newCustomer.name) {
+      setShippingDetails({
+        name: newCustomer.name,
+        email: newCustomer.email,
+        mobile: newCustomer.mobile,
+        gstNumber: newCustomer.gstNumber || "",
+      });
+    }
+  }, [sameAsBilling, newCustomer]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -241,6 +264,7 @@ const Sales = () => {
         name: customer.customerName || "",
         email: customer.email || "",
         mobile: customer.contactNumber || "",
+        gstNumber: customer.gstNumber || "",
         loyaltyCoins: customer.loyaltyCoins || 0 // ✅ THIS MUST BE INCLUDED
       }));
       setCustomers(customersData);
@@ -458,8 +482,18 @@ const Sales = () => {
       email: customer.email,
       mobile: customer.mobile,
       date: newCustomer.date,
+      gstNumber: customer.gstNumber || "",
       remarks: newCustomer.remarks
     });
+
+    if (sameAsBilling) {
+      setShippingDetails({
+        name: customer.name,
+        email: customer.email,
+        mobile: customer.mobile,
+        gstNumber: customer.gstNumber || "",
+      });
+    }
     setCustomerMobileSearch(customer.mobile);
     setShowCustomerDropdown(false);
 
@@ -762,7 +796,16 @@ const Sales = () => {
 
       const invoice = {
         date: newCustomer.date || new Date().toISOString().split('T')[0],
-        customer: customerToUse,
+        customer: {
+          ...customerToUse,
+          gstNumber: customerToUse.gstNumber || '' // ✅ ADD GST TO CUSTOMER
+        },
+        shippingDetails: sameAsBilling ? null : {
+          name: shippingDetails.name,
+          email: shippingDetails.email,
+          mobile: shippingDetails.mobile,
+          gstNumber: shippingDetails.gstNumber
+        },
         items: invoiceTotals.items.map(item => ({
           ...item,
           originalPrice: item.originalPrice || item.price,
@@ -916,10 +959,12 @@ const Sales = () => {
           customerNumber: invoiceData.customer?.customerNumber,
           name: invoiceData.customer?.name,
           email: invoiceData.customer?.email,
-          mobile: invoiceData.customer?.mobile
+          mobile: invoiceData.customer?.mobile,
+          gstNumber: invoiceData.customer?.gstNumber
         },
         paymentType: invoiceData.paymentType,
         remarks: invoiceData.remarks || '',
+         shippingDetails: invoiceData.shippingDetails,
 
         userDetails: user ? {
           userId: user.userId,
@@ -1461,6 +1506,10 @@ const Sales = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [userPermissions, setUserPermissions] = useState([]);
 
+    // ✅ ADD STATE FOR SHIPPING DETAILS EDITING
+    const [editedShippingDetails, setEditedShippingDetails] = useState({});
+    const [sameAsBilling, setSameAsBilling] = useState(false);
+
     const getAvailableQuantity = (productId, batchNumber) => {
       const inventoryItem = inventory.find(item => item.productId === productId);
       if (!inventoryItem) return 0;
@@ -1482,9 +1531,7 @@ const Sales = () => {
       }
     }, []);
 
-
     const hasAdminPermission = userPermissions.includes('admin');
-
 
     // Refs
     const batchDropdownRef = useRef(null);
@@ -1498,14 +1545,37 @@ const Sales = () => {
           // Ensure we have the original quantity for comparison
           originalQuantity: item.quantity
         })));
+
+        // ✅ INITIALIZE SHIPPING DETAILS
+        if (invoice.shippingDetails) {
+          setEditedShippingDetails({ ...invoice.shippingDetails });
+          setSameAsBilling(false);
+        } else {
+          // If no shipping details, auto-fill from customer
+          setEditedShippingDetails({
+            name: invoice.customer?.name || "",
+            email: invoice.customer?.email || "",
+            mobile: invoice.customer?.mobile || "",
+            gstNumber: invoice.customer?.gstNumber || ""
+          });
+          setSameAsBilling(true);
+        }
       }
     }, [invoice]);
 
-
+    // ✅ ADD EFFECT TO AUTO-FILL SHIPPING WHEN SAME AS BILLING IS CHECKED
+    useEffect(() => {
+      if (sameAsBilling && invoice) {
+        setEditedShippingDetails({
+          name: invoice.customer?.name || "",
+          email: invoice.customer?.email || "",
+          mobile: invoice.customer?.mobile || "",
+          gstNumber: invoice.customer?.gstNumber || ""
+        });
+      }
+    }, [sameAsBilling, invoice]);
 
     // Add this useEffect in the InvoiceModal component to debug promo discount updates
-    // Update the debug useEffect to use the correct function call:
-
     useEffect(() => {
       if (isEditingProducts) {
         const currentTotals = calculateInvoiceTotals(editedItems, invoice); // ✅ Pass invoice here
@@ -1727,111 +1797,6 @@ const Sales = () => {
       }
     };
 
-    // FIXED: EXACT SAME CALCULATION LOGIC AS MAIN SALES COMPONENT
-    // const calculateInvoiceTotals = (items) => {
-    //   let subtotal = 0;
-    //   let totalDiscountAmount = 0;
-    //   let totalBaseValue = 0;
-    //   let totalTaxAmount = 0;
-    //   let cgstAmount = 0;
-    //   let sgstAmount = 0;
-    //   const taxPercentages = new Set();
-
-    //   // First calculate amount after all discounts
-    //   let amountAfterAllDiscounts = 0;
-
-    //   const itemsWithCalculations = items.map(item => {
-    //     const quantity = item.quantity || 1;
-    //     const taxRate = item.taxSlab || 18;
-    //     const discountPercentage = item.discount || 0;
-
-    //     taxPercentages.add(taxRate);
-
-    //     const itemTotalInclTax = item.price * quantity;
-    //     const itemDiscountAmount = itemTotalInclTax * (discountPercentage / 100);
-    //     const itemTotalAfterDiscount = itemTotalInclTax - itemDiscountAmount;
-
-    //     subtotal += itemTotalInclTax;
-    //     totalDiscountAmount += itemDiscountAmount;
-    //     amountAfterAllDiscounts += itemTotalAfterDiscount;
-
-    //     return {
-    //       ...item,
-    //       discountAmount: itemDiscountAmount,
-    //       totalAmount: itemTotalAfterDiscount
-    //     };
-    //   });
-
-    //   // Apply promo discount - PRESERVE ORIGINAL INVOICE'S PROMO DISCOUNT
-    //   let promoDiscountAmount = invoice.promoDiscount || 0;
-
-    //   // Amount after promo discount
-    //   const amountAfterPromo = amountAfterAllDiscounts - promoDiscountAmount;
-
-    //   // Apply loyalty coins discount - PRESERVE ORIGINAL INVOICE'S LOYALTY DISCOUNT
-    //   let loyaltyDiscountAmount = invoice.loyaltyDiscount || 0;
-
-    //   // Final amount after ALL discounts (promo + loyalty)
-    //   const finalAmountAfterAllDiscounts = amountAfterPromo - loyaltyDiscountAmount;
-
-    //   // Calculate tax on the final amount after ALL discounts
-    //   const itemsWithTaxCalculations = itemsWithCalculations.map(item => {
-    //     const taxRate = item.taxSlab || 18;
-
-    //     // Calculate tax based on final discounted amount for this item
-    //     const itemFinalAmount = (item.totalAmount / amountAfterAllDiscounts) * finalAmountAfterAllDiscounts;
-    //     const itemBaseValue = itemFinalAmount / (1 + taxRate / 100);
-    //     const itemTaxAmount = itemFinalAmount - itemBaseValue;
-    //     const itemCgstAmount = taxPercentages.size === 1 ? itemTaxAmount / 2 : 0;
-    //     const itemSgstAmount = taxPercentages.size === 1 ? itemTaxAmount / 2 : 0;
-
-    //     totalBaseValue += itemBaseValue;
-    //     totalTaxAmount += itemTaxAmount;
-    //     cgstAmount += itemCgstAmount;
-    //     sgstAmount += itemSgstAmount;
-
-    //     return {
-    //       ...item,
-    //       baseValue: itemBaseValue,
-    //       taxAmount: itemTaxAmount,
-    //       cgstAmount: itemCgstAmount,
-    //       sgstAmount: itemSgstAmount,
-    //       finalAmount: itemFinalAmount
-    //     };
-    //   });
-
-    //   const hasMixedTaxRates = taxPercentages.size > 1;
-    //   if (hasMixedTaxRates) {
-    //     cgstAmount = 0;
-    //     sgstAmount = 0;
-    //   }
-
-    //   // Final grand total
-    //   const grandTotal = finalAmountAfterAllDiscounts;
-
-    //   return {
-    //     items: itemsWithTaxCalculations,
-    //     subtotal: subtotal,
-    //     baseValue: totalBaseValue,
-    //     discount: totalDiscountAmount,
-    //     promoDiscount: promoDiscountAmount,
-    //     loyaltyDiscount: loyaltyDiscountAmount,
-    //     loyaltyCoinsUsed: invoice.loyaltyCoinsUsed || 0,
-    //     tax: totalTaxAmount,
-    //     cgst: cgstAmount,
-    //     sgst: sgstAmount,
-    //     hasMixedTaxRates: hasMixedTaxRates,
-    //     taxPercentages: Array.from(taxPercentages),
-    //     amountAfterAllDiscounts: amountAfterAllDiscounts,
-    //     finalAmountAfterAllDiscounts: finalAmountAfterAllDiscounts,
-    //     grandTotal: grandTotal
-    //   };
-    // };
-
-    // FIXED: Proper calculation breakdown for VIEW MODE that shows ALL discounts
-
-
-
     const calculateInvoiceBreakdown = (invoice) => {
       console.log("🔍 VIEW MODE CALCULATION - Original invoice data:", {
         subtotal: invoice.subtotal,
@@ -1880,9 +1845,6 @@ const Sales = () => {
         loyaltyCoinsUsed: invoice.loyaltyCoinsUsed || 0
       };
     };
-
-    // In the InvoiceModal component, update the calculateCurrentTotals function:
-
 
     const calculateCurrentTotals = () => {
       if (isEditingProducts) {
@@ -1940,13 +1902,29 @@ const Sales = () => {
       }));
     };
 
+    // ✅ UPDATE THE handleSave FUNCTION TO INCLUDE SHIPPING DETAILS
     const handleSave = async () => {
       try {
-        await onUpdate(editedInvoice);
+        const updateData = {
+          ...editedInvoice,
+          // ✅ INCLUDE SHIPPING DETAILS IN UPDATE
+          shippingDetails: sameAsBilling ? null : editedShippingDetails
+        };
+
+        await onUpdate(updateData);
         setIsEditing(false);
       } catch (error) {
         console.error("Error updating invoice:", error);
       }
+    };
+
+    // ✅ ADD FUNCTION TO HANDLE SHIPPING DETAILS INPUT CHANGES
+    const handleShippingInputChange = (e) => {
+      const { name, value } = e.target;
+      setEditedShippingDetails(prev => ({
+        ...prev,
+        [name]: value
+      }));
     };
 
     const calculateItemTotal = (item) => {
@@ -2043,6 +2021,130 @@ const Sales = () => {
                     />
                   ) : (
                     <span className="detail-value">{invoice.customer?.mobile}</span>
+                  )}
+                </div>
+
+                <div className="detail-row">
+                  <span className="detail-label">GST Number:</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="gstNumber"
+                      value={editedInvoice.customer?.gstNumber || ''}
+                      onChange={handleInputChange}
+                      className="edit-input"
+                      placeholder="GST Number (optional)"
+                    />
+                  ) : (
+                    <span className="detail-value">{invoice.customer?.gstNumber || 'N/A'}</span>
+                  )}
+                </div>
+
+                {/* ✅ UPDATED: SHIPPING DETAILS SECTION - NOW EACH FIELD ON SEPARATE ROW */}
+                <div className="shipping-section" style={{ gridColumn: '1 / -1', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
+                  <h4 style={{ marginBottom: '15px', color: '#3f3f91' }}>Shipping Details</h4>
+
+                  {/* Same as Billing Checkbox */}
+                  {isEditing && (
+                    <div className="detail-row" style={{ marginBottom: '15px' }}>
+                      <label className="same-as-billing-checkbox" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={sameAsBilling}
+                          onChange={(e) => setSameAsBilling(e.target.checked)}
+                        />
+                        <span>Same as Billing Details</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Shipping Details Fields - EACH ON SEPARATE ROW */}
+                  {(!sameAsBilling || !isEditing) && (
+                    <div className="shipping-details-fields">
+                      {/* Shipping Name - SEPARATE ROW */}
+                      <div className="detail-row">
+                        <span className="detail-label">Shipping Name {!sameAsBilling && isEditing && '*'}:</span>
+                        {isEditing && !sameAsBilling ? (
+                          <input
+                            type="text"
+                            name="name"
+                            value={editedShippingDetails.name || ''}
+                            onChange={handleShippingInputChange}
+                            className="edit-input"
+                            required
+                          />
+                        ) : (
+                          <span className="detail-value">
+                            {invoice.shippingDetails?.name || (sameAsBilling ? invoice.customer?.name : 'N/A')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Shipping Mobile - SEPARATE ROW */}
+                      <div className="detail-row">
+                        <span className="detail-label">Shipping Mobile {!sameAsBilling && isEditing && '*'}:</span>
+                        {isEditing && !sameAsBilling ? (
+                          <input
+                            type="text"
+                            name="mobile"
+                            value={editedShippingDetails.mobile || ''}
+                            onChange={handleShippingInputChange}
+                            className="edit-input"
+                            required
+                          />
+                        ) : (
+                          <span className="detail-value">
+                            {invoice.shippingDetails?.mobile || (sameAsBilling ? invoice.customer?.mobile : 'N/A')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Shipping Email - SEPARATE ROW */}
+                      <div className="detail-row">
+                        <span className="detail-label">Shipping Email:</span>
+                        {isEditing && !sameAsBilling ? (
+                          <input
+                            type="email"
+                            name="email"
+                            value={editedShippingDetails.email || ''}
+                            onChange={handleShippingInputChange}
+                            className="edit-input"
+                          />
+                        ) : (
+                          <span className="detail-value">
+                            {invoice.shippingDetails?.email || (sameAsBilling ? invoice.customer?.email : 'N/A')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Shipping GST - SEPARATE ROW */}
+                      <div className="detail-row">
+                        <span className="detail-label">Shipping GST:</span>
+                        {isEditing && !sameAsBilling ? (
+                          <input
+                            type="text"
+                            name="gstNumber"
+                            value={editedShippingDetails.gstNumber || ''}
+                            onChange={handleShippingInputChange}
+                            className="edit-input"
+                            placeholder="Optional"
+                          />
+                        ) : (
+                          <span className="detail-value">
+                            {invoice.shippingDetails?.gstNumber || (sameAsBilling ? invoice.customer?.gstNumber : 'N/A')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show message when same as billing is selected */}
+                  {sameAsBilling && isEditing && (
+                    <div style={{ padding: '10px', background: '#f0f8ff', borderRadius: '6px', marginTop: '10px' }}>
+                      <p style={{ margin: 0, color: '#0066cc', fontSize: '14px' }}>
+                        Shipping details will be same as billing details
+                      </p>
+                    </div>
                   )}
                 </div>
 
@@ -3204,6 +3306,108 @@ const Sales = () => {
                       />
                     </div>
                   </div>
+                  <div className="form-group-row">
+                    <div className="field-wrapper">
+                      <label>GST Number</label>
+                      <input
+                        type="text"
+                        placeholder="Enter GST number (optional)"
+                        value={newCustomer.gstNumber || ""}
+                        onChange={(e) => setNewCustomer({
+                          ...newCustomer,
+                          gstNumber: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+
+                  {/* Shipping Details Section */}
+                  <h3 className="section-heading">Shipping Details</h3>
+
+                  <div className="form-group-row">
+                    <div className="field-wrapper" style={{ width: '100%' }}>
+                      <label className="same-as-billing-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={sameAsBilling}
+                          onChange={(e) => {
+                            setSameAsBilling(e.target.checked);
+                            if (e.target.checked) {
+                              // Auto-fill from customer details
+                              setShippingDetails({
+                                name: newCustomer.name,
+                                email: newCustomer.email,
+                                mobile: newCustomer.mobile,
+                                gstNumber: newCustomer.gstNumber || "",
+                              });
+                            }
+                          }}
+                        />
+                        <span>Same as Billing Details</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {!sameAsBilling && (
+                    <div className="shipping-details-form">
+                      <div className="form-group-row">
+                        <div className="field-wrapper">
+                          <label>Shipping Name *</label>
+                          <input
+                            type="text"
+                            placeholder="Enter shipping name"
+                            value={shippingDetails.name}
+                            onChange={(e) => setShippingDetails({
+                              ...shippingDetails,
+                              name: e.target.value
+                            })}
+                            required
+                          />
+                        </div>
+                        <div className="field-wrapper">
+                          <label>Shipping Mobile *</label>
+                          <input
+                            type="text"
+                            placeholder="Enter shipping mobile"
+                            value={shippingDetails.mobile}
+                            onChange={(e) => setShippingDetails({
+                              ...shippingDetails,
+                              mobile: e.target.value
+                            })}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group-row">
+                        <div className="field-wrapper">
+                          <label>Shipping Email</label>
+                          <input
+                            type="email"
+                            placeholder="Enter shipping email"
+                            value={shippingDetails.email}
+                            onChange={(e) => setShippingDetails({
+                              ...shippingDetails,
+                              email: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div className="field-wrapper">
+                          <label>Shipping GST Number</label>
+                          <input
+                            type="text"
+                            placeholder="Enter shipping GST (optional)"
+                            value={shippingDetails.gstNumber}
+                            onChange={(e) => setShippingDetails({
+                              ...shippingDetails,
+                              gstNumber: e.target.value
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Loyalty Coins Section */}
                   {availableLoyaltyCoins > 0 && (
